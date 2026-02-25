@@ -1,0 +1,1177 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Mozeka.Ai — Lab Instrument Management</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Mono:wght@400;500&family=Instrument+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0a0f1a;
+    --surface: #111827;
+    --surface2: #1a2332;
+    --border: #1f2d42;
+    --accent: #00d4a8;
+    --accent2: #3b82f6;
+    --warn: #f59e0b;
+    --danger: #ef4444;
+    --success: #10b981;
+    --text: #e2e8f0;
+    --muted: #64748b;
+    --subtle: #334155;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Instrument Sans', sans-serif;
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  /* NAV */
+  nav {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 32px;
+    height: 60px;
+    background: var(--surface);
+    border-bottom: 1px solid var(--border);
+    position: sticky;
+    top: 0;
+    z-index: 100;
+  }
+
+  .logo {
+    font-family: 'DM Serif Display', serif;
+    font-size: 22px;
+    color: var(--accent);
+    letter-spacing: -0.5px;
+  }
+
+  .logo span { color: var(--text); opacity: 0.5; font-size: 13px; font-family: 'DM Mono', monospace; margin-left: 8px; }
+
+  .nav-tabs {
+    display: flex;
+    gap: 2px;
+  }
+
+  .nav-tab {
+    padding: 8px 18px;
+    border-radius: 6px;
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--muted);
+    cursor: pointer;
+    transition: all 0.15s;
+    border: none;
+    background: none;
+  }
+
+  .nav-tab:hover { color: var(--text); background: var(--surface2); }
+  .nav-tab.active { color: var(--accent); background: rgba(0,212,168,0.1); }
+
+  .nav-right {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+
+  .avatar {
+    width: 32px; height: 32px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, var(--accent2), var(--accent));
+    display: flex; align-items: center; justify-content: center;
+    font-size: 12px; font-weight: 600;
+    cursor: pointer;
+  }
+
+  /* SCREENS */
+  .screen { display: none; padding: 32px; animation: fadeIn 0.2s ease; }
+  .screen.active { display: block; }
+
+  @keyframes fadeIn { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: translateY(0); } }
+
+  /* PAGE HEADER */
+  .page-header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    margin-bottom: 28px;
+  }
+
+  .page-title {
+    font-family: 'DM Serif Display', serif;
+    font-size: 28px;
+    line-height: 1.1;
+    color: var(--text);
+  }
+
+  .page-subtitle { font-size: 13px; color: var(--muted); margin-top: 4px; }
+
+  .btn {
+    padding: 9px 20px;
+    border-radius: 8px;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    border: none;
+    transition: all 0.15s;
+    font-family: 'Instrument Sans', sans-serif;
+  }
+
+  .btn-primary { background: var(--accent); color: #0a0f1a; }
+  .btn-primary:hover { background: #00f0c0; }
+  .btn-ghost { background: var(--surface2); color: var(--text); border: 1px solid var(--border); }
+  .btn-ghost:hover { border-color: var(--accent); color: var(--accent); }
+
+  /* STAT CARDS */
+  .stats-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 16px;
+    margin-bottom: 28px;
+  }
+
+  .stat-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 20px 24px;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .stat-card::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 2px;
+  }
+
+  .stat-card.green::before { background: var(--success); }
+  .stat-card.blue::before { background: var(--accent2); }
+  .stat-card.warn::before { background: var(--warn); }
+  .stat-card.danger::before { background: var(--danger); }
+
+  .stat-label { font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 1px; color: var(--muted); margin-bottom: 8px; }
+  .stat-value { font-family: 'DM Mono', monospace; font-size: 32px; font-weight: 500; line-height: 1; }
+  .stat-value.green { color: var(--success); }
+  .stat-value.blue { color: var(--accent2); }
+  .stat-value.warn { color: var(--warn); }
+  .stat-value.danger { color: var(--danger); }
+  .stat-change { font-size: 11px; color: var(--muted); margin-top: 6px; }
+  .stat-change .up { color: var(--success); }
+  .stat-change .dn { color: var(--danger); }
+
+  /* TABLE */
+  .table-wrapper {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    overflow: hidden;
+    margin-bottom: 24px;
+  }
+
+  .table-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 16px 24px;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .table-title { font-size: 14px; font-weight: 600; }
+
+  .filter-row {
+    display: flex;
+    gap: 8px;
+  }
+
+  .filter-chip {
+    padding: 4px 12px;
+    border-radius: 20px;
+    font-size: 12px;
+    font-weight: 500;
+    cursor: pointer;
+    border: 1px solid var(--border);
+    background: none;
+    color: var(--muted);
+    font-family: 'Instrument Sans', sans-serif;
+    transition: all 0.15s;
+  }
+
+  .filter-chip:hover, .filter-chip.active { border-color: var(--accent); color: var(--accent); background: rgba(0,212,168,0.08); }
+
+  table { width: 100%; border-collapse: collapse; }
+  thead tr { border-bottom: 1px solid var(--border); }
+  th { padding: 10px 24px; text-align: left; font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.8px; color: var(--muted); }
+  td { padding: 14px 24px; font-size: 13px; border-bottom: 1px solid rgba(31,45,66,0.5); }
+  tbody tr:last-child td { border-bottom: none; }
+  tbody tr:hover { background: var(--surface2); cursor: pointer; }
+
+  .badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    padding: 3px 10px;
+    border-radius: 20px;
+    font-size: 11px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+
+  .badge::before { content: ''; width: 5px; height: 5px; border-radius: 50%; }
+  .badge-open { background: rgba(239,68,68,0.12); color: var(--danger); }
+  .badge-open::before { background: var(--danger); box-shadow: 0 0 4px var(--danger); animation: pulse 1.5s infinite; }
+  .badge-scheduled { background: rgba(59,130,246,0.12); color: var(--accent2); }
+  .badge-scheduled::before { background: var(--accent2); }
+  .badge-pending { background: rgba(245,158,11,0.12); color: var(--warn); }
+  .badge-pending::before { background: var(--warn); }
+  .badge-closed { background: rgba(16,185,129,0.12); color: var(--success); }
+  .badge-closed::before { background: var(--success); }
+
+  @keyframes pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.3; }
+  }
+
+  .mono { font-family: 'DM Mono', monospace; font-size: 12px; color: var(--muted); }
+
+  /* TICKET DETAIL */
+  .two-col { display: grid; grid-template-columns: 1fr 340px; gap: 20px; }
+
+  .card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 24px;
+    margin-bottom: 16px;
+  }
+
+  .card-title { font-size: 13px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.8px; color: var(--muted); margin-bottom: 16px; }
+
+  .field-row { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 16px; }
+
+  .field label { font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.8px; color: var(--muted); display: block; margin-bottom: 6px; }
+  .field-value { font-size: 14px; color: var(--text); }
+  .field-input {
+    width: 100%;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 10px 14px;
+    font-size: 13px;
+    color: var(--text);
+    font-family: 'Instrument Sans', sans-serif;
+    outline: none;
+    transition: border-color 0.15s;
+  }
+  .field-input:focus { border-color: var(--accent); }
+
+  /* TIMELINE */
+  .timeline { position: relative; padding-left: 24px; }
+  .timeline::before { content: ''; position: absolute; left: 7px; top: 0; bottom: 0; width: 1px; background: var(--border); }
+
+  .timeline-item { position: relative; margin-bottom: 20px; }
+  .timeline-item::before {
+    content: '';
+    position: absolute;
+    left: -20px;
+    top: 4px;
+    width: 10px; height: 10px;
+    border-radius: 50%;
+    background: var(--surface2);
+    border: 2px solid var(--border);
+  }
+  .timeline-item.done::before { background: var(--accent); border-color: var(--accent); }
+  .timeline-item.active-step::before { background: var(--accent2); border-color: var(--accent2); box-shadow: 0 0 8px var(--accent2); }
+
+  .timeline-time { font-family: 'DM Mono', monospace; font-size: 11px; color: var(--muted); margin-bottom: 2px; }
+  .timeline-text { font-size: 13px; color: var(--text); }
+  .timeline-sub { font-size: 12px; color: var(--muted); margin-top: 2px; }
+
+  /* STATUS PIPELINE */
+  .pipeline {
+    display: flex;
+    align-items: center;
+    gap: 0;
+    margin-bottom: 28px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 20px 28px;
+  }
+
+  .pipeline-step {
+    flex: 1;
+    text-align: center;
+    position: relative;
+  }
+
+  .pipeline-step:not(:last-child)::after {
+    content: '→';
+    position: absolute;
+    right: -8px;
+    top: 50%;
+    transform: translateY(-60%);
+    color: var(--border);
+    font-size: 18px;
+  }
+
+  .pipeline-step.done .step-dot { background: var(--success); border-color: var(--success); }
+  .pipeline-step.current .step-dot { background: var(--accent2); border-color: var(--accent2); box-shadow: 0 0 12px rgba(59,130,246,0.5); }
+
+  .step-dot {
+    width: 14px; height: 14px;
+    border-radius: 50%;
+    border: 2px solid var(--border);
+    background: var(--surface2);
+    margin: 0 auto 8px;
+  }
+
+  .step-name { font-size: 12px; font-weight: 600; color: var(--muted); }
+  .pipeline-step.done .step-name { color: var(--success); }
+  .pipeline-step.current .step-name { color: var(--accent2); }
+
+  /* VENDOR PORTAL */
+  .vendor-header {
+    background: linear-gradient(135deg, #0d1f35 0%, #0a1628 100%);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 32px;
+    margin-bottom: 24px;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .vendor-header::before {
+    content: '';
+    position: absolute;
+    top: -40px; right: -40px;
+    width: 200px; height: 200px;
+    border-radius: 50%;
+    background: radial-gradient(circle, rgba(0,212,168,0.08) 0%, transparent 70%);
+  }
+
+  .vendor-name { font-family: 'DM Serif Display', serif; font-size: 22px; margin-bottom: 4px; }
+  .vendor-meta { font-size: 13px; color: var(--muted); }
+
+  .action-cards { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+
+  .action-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 20px;
+    cursor: pointer;
+    transition: all 0.15s;
+  }
+
+  .action-card:hover { border-color: var(--accent); transform: translateY(-1px); }
+  .action-card-icon { font-size: 24px; margin-bottom: 10px; }
+  .action-card-title { font-size: 14px; font-weight: 600; margin-bottom: 4px; }
+  .action-card-desc { font-size: 12px; color: var(--muted); line-height: 1.4; }
+
+  /* NOTIFICATIONS */
+  .notif-list { display: flex; flex-direction: column; gap: 2px; }
+
+  .notif-item {
+    display: flex;
+    align-items: flex-start;
+    gap: 14px;
+    padding: 14px 16px;
+    border-radius: 8px;
+    border: 1px solid transparent;
+    transition: all 0.15s;
+    cursor: pointer;
+  }
+
+  .notif-item:hover { background: var(--surface2); border-color: var(--border); }
+  .notif-item.unread { background: rgba(59,130,246,0.05); border-color: rgba(59,130,246,0.15); }
+
+  .notif-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--accent2); margin-top: 4px; flex-shrink: 0; }
+  .notif-dot.read { background: transparent; border: 1px solid var(--border); }
+
+  .notif-content { flex: 1; }
+  .notif-title { font-size: 13px; font-weight: 500; margin-bottom: 2px; }
+  .notif-sub { font-size: 12px; color: var(--muted); }
+  .notif-time { font-family: 'DM Mono', monospace; font-size: 11px; color: var(--muted); flex-shrink: 0; }
+
+  /* REPORTING */
+  .report-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 24px; }
+
+  .kpi-bar { margin-bottom: 16px; }
+  .kpi-label { display: flex; justify-content: space-between; margin-bottom: 6px; font-size: 12px; }
+  .kpi-label span:last-child { font-family: 'DM Mono', monospace; color: var(--accent); }
+  .kpi-track { height: 6px; background: var(--surface2); border-radius: 3px; overflow: hidden; }
+  .kpi-fill { height: 100%; border-radius: 3px; background: linear-gradient(90deg, var(--accent2), var(--accent)); }
+
+  .sla-table td, .sla-table th { padding: 10px 16px; }
+
+  /* SEARCH BAR */
+  .search-bar {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 8px 14px;
+    min-width: 240px;
+  }
+
+  .search-bar input {
+    background: none;
+    border: none;
+    outline: none;
+    color: var(--text);
+    font-size: 13px;
+    font-family: 'Instrument Sans', sans-serif;
+    flex: 1;
+  }
+
+  .search-bar input::placeholder { color: var(--muted); }
+
+  /* SCROLLBAR */
+  ::-webkit-scrollbar { width: 6px; }
+  ::-webkit-scrollbar-track { background: var(--bg); }
+  ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+
+  /* BREADCRUMB */
+  .breadcrumb { font-size: 12px; color: var(--muted); margin-bottom: 20px; }
+  .breadcrumb span { color: var(--text); }
+
+  select.field-input { cursor: pointer; }
+
+  .divider { height: 1px; background: var(--border); margin: 16px 0; }
+
+  .tag {
+    display: inline-block;
+    padding: 2px 8px;
+    border-radius: 4px;
+    font-size: 11px;
+    background: var(--surface2);
+    color: var(--muted);
+    border: 1px solid var(--border);
+    margin-right: 4px;
+  }
+</style>
+</head>
+<body>
+
+<nav>
+  <div class="logo">Mozeka<span style="color:var(--accent);opacity:1;">.Ai</span> <span>LAB INSTRUMENT MANAGEMENT</span></div>
+  <div class="nav-tabs">
+    <button class="nav-tab active" onclick="showScreen('dashboard')">Dashboard</button>
+    <button class="nav-tab" onclick="showScreen('tickets')">Work Orders</button>
+    <button class="nav-tab" onclick="showScreen('ticket-detail')">Ticket Detail</button>
+    <button class="nav-tab" onclick="showScreen('vendor')">Vendor Portal</button>
+    <button class="nav-tab" onclick="showScreen('reports')">Reports</button>
+    <button class="nav-tab" onclick="showScreen('notifications')">Notifications <span style="display:inline-block;width:16px;height:16px;background:var(--danger);border-radius:50%;font-size:10px;line-height:16px;text-align:center;margin-left:4px;">3</span></button>
+  </div>
+  <div class="nav-right">
+    <div class="search-bar">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="color:var(--muted)"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+      <input type="text" placeholder="Search instruments, tickets…">
+    </div>
+    <div class="avatar">JL</div>
+  </div>
+</nav>
+
+<!-- DASHBOARD -->
+<div id="dashboard" class="screen active">
+  <div class="page-header">
+    <div>
+      <div class="page-title">Good morning, Jamie.</div>
+      <div class="page-subtitle">Tuesday, Feb 24 · BioTech Lab Complex · 14 instruments tracked</div>
+    </div>
+    <button class="btn btn-primary" onclick="showScreen('ticket-detail')">+ New Work Order</button>
+  </div>
+
+  <div class="stats-grid">
+    <div class="stat-card danger">
+      <div class="stat-label">Open Tickets</div>
+      <div class="stat-value danger">4</div>
+      <div class="stat-change"><span class="dn">↑2</span> since last week</div>
+    </div>
+    <div class="stat-card blue">
+      <div class="stat-label">Scheduled</div>
+      <div class="stat-value blue">7</div>
+      <div class="stat-change"><span class="up">↑3</span> confirmed this week</div>
+    </div>
+    <div class="stat-card warn">
+      <div class="stat-label">Pending Close</div>
+      <div class="stat-value warn">2</div>
+      <div class="stat-change">Awaiting service reports</div>
+    </div>
+    <div class="stat-card green">
+      <div class="stat-label">Closed (30d)</div>
+      <div class="stat-value green">18</div>
+      <div class="stat-change"><span class="up">94%</span> on-time closure rate</div>
+    </div>
+  </div>
+
+  <!-- Pipeline overview -->
+  <div class="pipeline">
+    <div class="pipeline-step done">
+      <div class="step-dot"></div>
+      <div class="step-name">OPEN</div>
+      <div style="font-family:'DM Mono',monospace;font-size:20px;font-weight:500;color:var(--success);margin-top:4px;">4</div>
+    </div>
+    <div class="pipeline-step done">
+      <div class="step-dot"></div>
+      <div class="step-name">VENDOR CONTACTED</div>
+      <div style="font-family:'DM Mono',monospace;font-size:20px;font-weight:500;color:var(--success);margin-top:4px;">6</div>
+    </div>
+    <div class="pipeline-step current">
+      <div class="step-dot"></div>
+      <div class="step-name">SCHEDULED</div>
+      <div style="font-family:'DM Mono',monospace;font-size:20px;font-weight:500;color:var(--accent2);margin-top:4px;">7</div>
+    </div>
+    <div class="pipeline-step">
+      <div class="step-dot"></div>
+      <div class="step-name">IN SERVICE</div>
+      <div style="font-family:'DM Mono',monospace;font-size:20px;font-weight:500;color:var(--muted);margin-top:4px;">1</div>
+    </div>
+    <div class="pipeline-step">
+      <div class="step-dot"></div>
+      <div class="step-name">PENDING CLOSE</div>
+      <div style="font-family:'DM Mono',monospace;font-size:20px;font-weight:500;color:var(--warn);margin-top:4px;">2</div>
+    </div>
+    <div class="pipeline-step">
+      <div class="step-dot"></div>
+      <div class="step-name">CLOSED</div>
+      <div style="font-family:'DM Mono',monospace;font-size:20px;font-weight:500;color:var(--muted);margin-top:4px;">18</div>
+    </div>
+  </div>
+
+  <div class="table-wrapper">
+    <div class="table-header">
+      <div class="table-title">Upcoming Maintenance — Next 14 Days</div>
+      <div class="filter-row">
+        <button class="filter-chip active">All</button>
+        <button class="filter-chip">Overdue</button>
+        <button class="filter-chip">This Week</button>
+        <button class="filter-chip">Awaiting Vendor</button>
+      </div>
+    </div>
+    <table>
+      <thead>
+        <tr>
+          <th>Instrument</th>
+          <th>Asset ID</th>
+          <th>Service Type</th>
+          <th>Vendor</th>
+          <th>Target Date</th>
+          <th>Status</th>
+          <th>Days</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr onclick="showScreen('ticket-detail')">
+          <td><strong>HPLC System</strong><br><span class="mono">Agilent 1260 Infinity</span></td>
+          <td class="mono">AST-0042</td>
+          <td>Annual PM</td>
+          <td>Agilent Technologies</td>
+          <td class="mono">Feb 26, 2026</td>
+          <td><span class="badge badge-open">Open</span></td>
+          <td style="color:var(--danger);font-family:'DM Mono',monospace;font-size:12px;">2d</td>
+        </tr>
+        <tr>
+          <td><strong>Mass Spectrometer</strong><br><span class="mono">Waters Xevo G2-XS</span></td>
+          <td class="mono">AST-0017</td>
+          <td>Calibration</td>
+          <td>Waters Corp</td>
+          <td class="mono">Feb 28, 2026</td>
+          <td><span class="badge badge-scheduled">Scheduled</span></td>
+          <td style="color:var(--accent2);font-family:'DM Mono',monospace;font-size:12px;">4d</td>
+        </tr>
+        <tr>
+          <td><strong>Centrifuge</strong><br><span class="mono">Beckman Coulter Optima</span></td>
+          <td class="mono">AST-0031</td>
+          <td>Repair</td>
+          <td>Beckman Coulter</td>
+          <td class="mono">Mar 1, 2026</td>
+          <td><span class="badge badge-open">Open</span></td>
+          <td style="color:var(--warn);font-family:'DM Mono',monospace;font-size:12px;">5d</td>
+        </tr>
+        <tr>
+          <td><strong>PCR System</strong><br><span class="mono">Bio-Rad CFX96</span></td>
+          <td class="mono">AST-0055</td>
+          <td>Annual PM</td>
+          <td>Bio-Rad</td>
+          <td class="mono">Mar 3, 2026</td>
+          <td><span class="badge badge-pending">Pending Close</span></td>
+          <td style="color:var(--muted);font-family:'DM Mono',monospace;font-size:12px;">7d</td>
+        </tr>
+        <tr>
+          <td><strong>Flow Cytometer</strong><br><span class="mono">BD FACSCanto II</span></td>
+          <td class="mono">AST-0008</td>
+          <td>Calibration</td>
+          <td>BD Biosciences</td>
+          <td class="mono">Mar 7, 2026</td>
+          <td><span class="badge badge-scheduled">Scheduled</span></td>
+          <td style="color:var(--muted);font-family:'DM Mono',monospace;font-size:12px;">11d</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<!-- WORK ORDERS LIST -->
+<div id="tickets" class="screen">
+  <div class="page-header">
+    <div>
+      <div class="page-title">Work Orders</div>
+      <div class="page-subtitle">All service tickets across 14 instruments</div>
+    </div>
+    <div style="display:flex;gap:10px;">
+      <button class="btn btn-ghost">Export CSV</button>
+      <button class="btn btn-primary" onclick="showScreen('ticket-detail')">+ New Ticket</button>
+    </div>
+  </div>
+
+  <div class="table-wrapper">
+    <div class="table-header">
+      <div class="filter-row">
+        <button class="filter-chip active">All (31)</button>
+        <button class="filter-chip">Open (4)</button>
+        <button class="filter-chip">Scheduled (7)</button>
+        <button class="filter-chip">Pending Close (2)</button>
+        <button class="filter-chip">Closed (18)</button>
+      </div>
+      <div class="search-bar" style="min-width:200px;">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="color:var(--muted)"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+        <input type="text" placeholder="Filter tickets…">
+      </div>
+    </div>
+    <table>
+      <thead>
+        <tr>
+          <th>Ticket #</th>
+          <th>Instrument</th>
+          <th>Service Type</th>
+          <th>Vendor</th>
+          <th>Created</th>
+          <th>Target Date</th>
+          <th>Status</th>
+          <th>Assigned To</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr onclick="showScreen('ticket-detail')">
+          <td class="mono" style="color:var(--accent);">#WO-2026-089</td>
+          <td><strong>HPLC System</strong> · AST-0042</td>
+          <td>Annual PM</td>
+          <td>Agilent Technologies</td>
+          <td class="mono">Feb 20</td>
+          <td class="mono">Feb 26</td>
+          <td><span class="badge badge-open">Open</span></td>
+          <td>J. Lee</td>
+        </tr>
+        <tr>
+          <td class="mono" style="color:var(--accent);">#WO-2026-088</td>
+          <td><strong>Mass Spec</strong> · AST-0017</td>
+          <td>Calibration</td>
+          <td>Waters Corp</td>
+          <td class="mono">Feb 18</td>
+          <td class="mono">Feb 28</td>
+          <td><span class="badge badge-scheduled">Scheduled</span></td>
+          <td>M. Patel</td>
+        </tr>
+        <tr>
+          <td class="mono" style="color:var(--accent);">#WO-2026-085</td>
+          <td><strong>Centrifuge</strong> · AST-0031</td>
+          <td>Repair</td>
+          <td>Beckman Coulter</td>
+          <td class="mono">Feb 15</td>
+          <td class="mono">Mar 1</td>
+          <td><span class="badge badge-open">Open</span></td>
+          <td>J. Lee</td>
+        </tr>
+        <tr>
+          <td class="mono" style="color:var(--accent);">#WO-2026-081</td>
+          <td><strong>PCR System</strong> · AST-0055</td>
+          <td>Annual PM</td>
+          <td>Bio-Rad</td>
+          <td class="mono">Feb 10</td>
+          <td class="mono">Mar 3</td>
+          <td><span class="badge badge-pending">Pending Close</span></td>
+          <td>S. Nguyen</td>
+        </tr>
+        <tr>
+          <td class="mono" style="color:var(--accent);">#WO-2026-074</td>
+          <td><strong>Flow Cytometer</strong> · AST-0008</td>
+          <td>Calibration</td>
+          <td>BD Biosciences</td>
+          <td class="mono">Feb 5</td>
+          <td class="mono">Mar 7</td>
+          <td><span class="badge badge-scheduled">Scheduled</span></td>
+          <td>M. Patel</td>
+        </tr>
+        <tr>
+          <td class="mono">#WO-2026-060</td>
+          <td><strong>Spectrophotometer</strong> · AST-0022</td>
+          <td>Annual PM</td>
+          <td>Thermo Fisher</td>
+          <td class="mono">Jan 28</td>
+          <td class="mono">Feb 14</td>
+          <td><span class="badge badge-closed">Closed</span></td>
+          <td>J. Lee</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<!-- TICKET DETAIL -->
+<div id="ticket-detail" class="screen">
+  <div class="breadcrumb">Work Orders → <span>#WO-2026-089</span></div>
+
+  <div class="page-header">
+    <div>
+      <div class="page-title">HPLC System — Annual PM</div>
+      <div class="page-subtitle">Agilent 1260 Infinity · Asset ID: AST-0042 · Created Feb 20, 2026</div>
+    </div>
+    <div style="display:flex;gap:10px;align-items:center;">
+      <span class="badge badge-open" style="font-size:13px;padding:6px 14px;">Open</span>
+      <button class="btn btn-ghost">Send Reminder</button>
+      <button class="btn btn-primary">Confirm Schedule</button>
+    </div>
+  </div>
+
+  <!-- Status pipeline -->
+  <div class="pipeline" style="margin-bottom:24px;">
+    <div class="pipeline-step done">
+      <div class="step-dot"></div>
+      <div class="step-name">TICKET CREATED</div>
+      <div style="font-size:10px;color:var(--success);margin-top:2px;font-family:'DM Mono',monospace;">Feb 20</div>
+    </div>
+    <div class="pipeline-step done">
+      <div class="step-dot"></div>
+      <div class="step-name">VENDOR NOTIFIED</div>
+      <div style="font-size:10px;color:var(--success);margin-top:2px;font-family:'DM Mono',monospace;">Feb 20</div>
+    </div>
+    <div class="pipeline-step current">
+      <div class="step-dot"></div>
+      <div class="step-name">AWAITING CONFIRM</div>
+      <div style="font-size:10px;color:var(--accent2);margin-top:2px;font-family:'DM Mono',monospace;">Now</div>
+    </div>
+    <div class="pipeline-step">
+      <div class="step-dot"></div>
+      <div class="step-name">SCHEDULED</div>
+      <div style="font-size:10px;color:var(--muted);margin-top:2px;font-family:'DM Mono',monospace;">—</div>
+    </div>
+    <div class="pipeline-step">
+      <div class="step-dot"></div>
+      <div class="step-name">IN SERVICE</div>
+      <div style="font-size:10px;color:var(--muted);margin-top:2px;font-family:'DM Mono',monospace;">—</div>
+    </div>
+    <div class="pipeline-step">
+      <div class="step-dot"></div>
+      <div class="step-name">CLOSED</div>
+      <div style="font-size:10px;color:var(--muted);margin-top:2px;font-family:'DM Mono',monospace;">—</div>
+    </div>
+  </div>
+
+  <div class="two-col">
+    <div>
+      <div class="card">
+        <div class="card-title">Ticket Details</div>
+        <div class="field-row">
+          <div class="field">
+            <label>Service Type</label>
+            <select class="field-input">
+              <option selected>Annual Preventive Maintenance</option>
+              <option>Repair</option>
+              <option>Calibration</option>
+            </select>
+          </div>
+          <div class="field">
+            <label>Priority</label>
+            <select class="field-input">
+              <option>Normal</option>
+              <option selected>High</option>
+              <option>Critical</option>
+            </select>
+          </div>
+        </div>
+        <div class="field-row">
+          <div class="field">
+            <label>Target Service Date</label>
+            <input type="text" class="field-input" value="Feb 26, 2026">
+          </div>
+          <div class="field">
+            <label>Purchase Order</label>
+            <input type="text" class="field-input" value="PO-2026-1142">
+          </div>
+        </div>
+        <div class="field-row">
+          <div class="field">
+            <label>Assigned Coordinator</label>
+            <input type="text" class="field-input" value="Jamie Lee">
+          </div>
+          <div class="field">
+            <label>Lab Location</label>
+            <input type="text" class="field-input" value="Building A — Room 214">
+          </div>
+        </div>
+        <div class="field" style="margin-top:4px;">
+          <label>Notes</label>
+          <textarea class="field-input" rows="3" style="resize:none;">Column pressure issues reported by end user prior to scheduling. Vendor should inspect pump seals and column connections.</textarea>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-title">Vendor Communication Log</div>
+        <div style="display:flex;flex-direction:column;gap:10px;">
+          <div style="background:var(--surface2);border-radius:8px;padding:12px 14px;border-left:3px solid var(--accent);">
+            <div style="display:flex;justify-content:space-between;margin-bottom:4px;">
+              <span style="font-size:12px;font-weight:600;">Auto-Notification Sent</span>
+              <span class="mono">Feb 20, 09:00</span>
+            </div>
+            <div style="font-size:12px;color:var(--muted);">System sent service request to agilent-service@agilent.com with PO reference and target date.</div>
+          </div>
+          <div style="background:var(--surface2);border-radius:8px;padding:12px 14px;border-left:3px solid var(--warn);">
+            <div style="display:flex;justify-content:space-between;margin-bottom:4px;">
+              <span style="font-size:12px;font-weight:600;">Reminder Sent</span>
+              <span class="mono">Feb 22, 09:00</span>
+            </div>
+            <div style="font-size:12px;color:var(--muted);">No response after 48hrs. Automated follow-up reminder dispatched.</div>
+          </div>
+          <div style="background:var(--surface2);border-radius:8px;padding:12px 14px;border-left:3px solid var(--danger);">
+            <div style="display:flex;justify-content:space-between;margin-bottom:4px;">
+              <span style="font-size:12px;font-weight:600;">⚠ Escalation Triggered</span>
+              <span class="mono">Feb 24, 08:00</span>
+            </div>
+            <div style="font-size:12px;color:var(--muted);">No vendor confirmation. Escalated to Program Administrator. Manual outreach recommended.</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Sidebar -->
+    <div>
+      <div class="card">
+        <div class="card-title">Instrument Info</div>
+        <div style="display:flex;flex-direction:column;gap:10px;">
+          <div class="field"><label>Model</label><div class="field-value">Agilent 1260 Infinity II</div></div>
+          <div class="field"><label>Serial #</label><div class="field-value mono">DE82401982</div></div>
+          <div class="field"><label>Installation Date</label><div class="field-value">March 14, 2021</div></div>
+          <div class="field"><label>Last Service</label><div class="field-value">Feb 18, 2025</div></div>
+          <div class="field"><label>Service Interval</label><div class="field-value">12 months</div></div>
+          <div class="field"><label>Tags</label><div style="margin-top:4px;"><span class="tag">HPLC</span><span class="tag">Critical</span><span class="tag">Lab A</span></div></div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-title">Activity Timeline</div>
+        <div class="timeline">
+          <div class="timeline-item done">
+            <div class="timeline-time">Feb 20, 09:00</div>
+            <div class="timeline-text">Ticket created by system</div>
+            <div class="timeline-sub">Triggered by scheduled maintenance calendar</div>
+          </div>
+          <div class="timeline-item done">
+            <div class="timeline-time">Feb 20, 09:01</div>
+            <div class="timeline-text">Vendor notification sent</div>
+            <div class="timeline-sub">Email → agilent-service@agilent.com</div>
+          </div>
+          <div class="timeline-item done">
+            <div class="timeline-time">Feb 22, 09:00</div>
+            <div class="timeline-text">Reminder dispatched</div>
+            <div class="timeline-sub">No response after 48h SLA threshold</div>
+          </div>
+          <div class="timeline-item active-step">
+            <div class="timeline-time">Feb 24, 08:00</div>
+            <div class="timeline-text">Escalation triggered</div>
+            <div class="timeline-sub">Awaiting manual coordinator action</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="card" style="background: rgba(239,68,68,0.05); border-color: rgba(239,68,68,0.2);">
+        <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;">
+          <div style="width:8px;height:8px;border-radius:50%;background:var(--danger);box-shadow:0 0 6px var(--danger);animation:pulse 1.5s infinite;"></div>
+          <span style="font-size:12px;font-weight:600;color:var(--danger);">ATTENTION REQUIRED</span>
+        </div>
+        <div style="font-size:12px;color:var(--muted);line-height:1.5;">Target date in <strong style="color:var(--danger);">2 days</strong>. Vendor has not confirmed. Manual outreach or reassignment recommended to avoid a missed interval.</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- VENDOR PORTAL -->
+<div id="vendor" class="screen">
+  <div class="page-header">
+    <div>
+      <div class="page-title">Vendor Portal</div>
+      <div class="page-subtitle">Secure access for service providers</div>
+    </div>
+  </div>
+
+  <div class="vendor-header">
+    <div style="display:flex;align-items:center;gap:16px;margin-bottom:16px;">
+      <div style="width:48px;height:48px;border-radius:12px;background:linear-gradient(135deg,#1e3a5f,#0d2137);border:1px solid var(--border);display:flex;align-items:center;justify-content:center;font-size:20px;">🔬</div>
+      <div>
+        <div class="vendor-name">Agilent Technologies</div>
+        <div class="vendor-meta">Service Engineer: Robert Chen · Logged in via secure link</div>
+      </div>
+    </div>
+    <div style="display:flex;gap:24px;">
+      <div><div style="font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:1px;">Open Requests</div><div style="font-family:'DM Mono',monospace;font-size:22px;color:var(--danger);">2</div></div>
+      <div><div style="font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:1px;">Upcoming</div><div style="font-family:'DM Mono',monospace;font-size:22px;color:var(--accent2);">3</div></div>
+      <div><div style="font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:1px;">Completed (30d)</div><div style="font-family:'DM Mono',monospace;font-size:22px;color:var(--success);">5</div></div>
+    </div>
+  </div>
+
+  <div class="table-wrapper" style="margin-bottom:24px;">
+    <div class="table-header">
+      <div class="table-title">Pending Your Response</div>
+    </div>
+    <table>
+      <thead>
+        <tr><th>Ticket</th><th>Site</th><th>Instrument</th><th>Service</th><th>Requested Date</th><th>PO #</th><th>Action</th></tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td class="mono" style="color:var(--accent);">#WO-2026-089</td>
+          <td>BioTech Lab — Building A</td>
+          <td>HPLC System · AST-0042</td>
+          <td>Annual PM</td>
+          <td class="mono">Feb 26, 2026</td>
+          <td class="mono">PO-2026-1142</td>
+          <td>
+            <div style="display:flex;gap:6px;">
+              <button class="btn btn-primary" style="padding:5px 12px;font-size:12px;">✓ Confirm</button>
+              <button class="btn btn-ghost" style="padding:5px 12px;font-size:12px;">Propose Alt Date</button>
+            </div>
+          </td>
+        </tr>
+        <tr>
+          <td class="mono" style="color:var(--accent);">#WO-2026-076</td>
+          <td>BioTech Lab — Building C</td>
+          <td>GC-MS System · AST-0061</td>
+          <td>Calibration</td>
+          <td class="mono">Mar 5, 2026</td>
+          <td class="mono">PO-2026-1130</td>
+          <td>
+            <div style="display:flex;gap:6px;">
+              <button class="btn btn-primary" style="padding:5px 12px;font-size:12px;">✓ Confirm</button>
+              <button class="btn btn-ghost" style="padding:5px 12px;font-size:12px;">Propose Alt Date</button>
+            </div>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="action-cards">
+    <div class="action-card">
+      <div class="action-card-icon">📋</div>
+      <div class="action-card-title">Upload Service Report</div>
+      <div class="action-card-desc">Submit completed service documentation to close a work order and notify the lab coordinator.</div>
+    </div>
+    <div class="action-card">
+      <div class="action-card-icon">📅</div>
+      <div class="action-card-title">Propose Alternate Date</div>
+      <div class="action-card-desc">Suggest a different service date and provide a reason. The lab coordinator will be notified immediately.</div>
+    </div>
+    <div class="action-card">
+      <div class="action-card-icon">🔧</div>
+      <div class="action-card-title">Log Parts & Labor</div>
+      <div class="action-card-desc">Record parts used and labor hours for completed repairs.</div>
+    </div>
+    <div class="action-card">
+      <div class="action-card-icon">📊</div>
+      <div class="action-card-title">View Service History</div>
+      <div class="action-card-desc">Browse past service records for all instruments assigned to your account.</div>
+    </div>
+  </div>
+</div>
+
+<!-- REPORTS -->
+<div id="reports" class="screen">
+  <div class="page-header">
+    <div>
+      <div class="page-title">Reports & Analytics</div>
+      <div class="page-subtitle">SLA compliance · Closure rates · Vendor performance</div>
+    </div>
+    <div style="display:flex;gap:10px;">
+      <select class="field-input" style="width:160px;">
+        <option>Last 30 Days</option>
+        <option>Last 90 Days</option>
+        <option>Year to Date</option>
+      </select>
+      <button class="btn btn-ghost">Export PDF</button>
+    </div>
+  </div>
+
+  <div class="stats-grid" style="margin-bottom:24px;">
+    <div class="stat-card green">
+      <div class="stat-label">On-Time Closure</div>
+      <div class="stat-value green">94%</div>
+      <div class="stat-change">Target: ≥90% <span class="up">✓</span></div>
+    </div>
+    <div class="stat-card green">
+      <div class="stat-label">Avg Vendor Response</div>
+      <div class="stat-value green">0.8<span style="font-size:16px;">d</span></div>
+      <div class="stat-change">Target: ≤1 day <span class="up">✓</span></div>
+    </div>
+    <div class="stat-card warn">
+      <div class="stat-label">Missed Intervals</div>
+      <div class="stat-value warn">6%</div>
+      <div class="stat-change">Target: &lt;5% <span class="dn">↑</span> Close</div>
+    </div>
+    <div class="stat-card green">
+      <div class="stat-label">Manual Coord. Time</div>
+      <div class="stat-value green">3.2<span style="font-size:16px;">h</span></div>
+      <div class="stat-change">Target: &lt;4 hrs/wk <span class="up">✓</span></div>
+    </div>
+  </div>
+
+  <div class="report-grid">
+    <div class="card">
+      <div class="card-title">KPI Progress vs Target</div>
+      <div class="kpi-bar">
+        <div class="kpi-label"><span>On-Time Closure Rate</span><span>94% / 90% target</span></div>
+        <div class="kpi-track"><div class="kpi-fill" style="width:94%;"></div></div>
+      </div>
+      <div class="kpi-bar">
+        <div class="kpi-label"><span>Vendor Response Time</span><span>0.8d / ≤1d target</span></div>
+        <div class="kpi-track"><div class="kpi-fill" style="width:80%;background:linear-gradient(90deg,var(--success),var(--accent));"></div></div>
+      </div>
+      <div class="kpi-bar">
+        <div class="kpi-label"><span>Missed Service Rate</span><span>6% / &lt;5% target</span></div>
+        <div class="kpi-track"><div class="kpi-fill" style="width:70%;background:linear-gradient(90deg,var(--warn),#f97316);"></div></div>
+      </div>
+      <div class="kpi-bar">
+        <div class="kpi-label"><span>Manual Coord. Hours Saved</span><span>3.2h / &lt;4h target</span></div>
+        <div class="kpi-track"><div class="kpi-fill" style="width:88%;"></div></div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">Vendor SLA Compliance</div>
+      <table class="sla-table" style="width:100%;">
+        <thead>
+          <tr style="border-bottom:1px solid var(--border);">
+            <th style="text-align:left;font-size:11px;color:var(--muted);padding:8px 0;">Vendor</th>
+            <th style="text-align:right;font-size:11px;color:var(--muted);">Response</th>
+            <th style="text-align:right;font-size:11px;color:var(--muted);">On-Time</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr style="border-bottom:1px solid rgba(31,45,66,0.4);">
+            <td style="padding:10px 0;font-size:13px;">Agilent Technologies</td>
+            <td style="text-align:right;font-family:'DM Mono',monospace;font-size:12px;color:var(--warn);">1.2d</td>
+            <td style="text-align:right;font-family:'DM Mono',monospace;font-size:12px;color:var(--success);">91%</td>
+          </tr>
+          <tr style="border-bottom:1px solid rgba(31,45,66,0.4);">
+            <td style="padding:10px 0;font-size:13px;">Waters Corp</td>
+            <td style="text-align:right;font-family:'DM Mono',monospace;font-size:12px;color:var(--success);">0.5d</td>
+            <td style="text-align:right;font-family:'DM Mono',monospace;font-size:12px;color:var(--success);">97%</td>
+          </tr>
+          <tr style="border-bottom:1px solid rgba(31,45,66,0.4);">
+            <td style="padding:10px 0;font-size:13px;">Beckman Coulter</td>
+            <td style="text-align:right;font-family:'DM Mono',monospace;font-size:12px;color:var(--success);">0.8d</td>
+            <td style="text-align:right;font-family:'DM Mono',monospace;font-size:12px;color:var(--warn);">85%</td>
+          </tr>
+          <tr>
+            <td style="padding:10px 0;font-size:13px;">BD Biosciences</td>
+            <td style="text-align:right;font-family:'DM Mono',monospace;font-size:12px;color:var(--success);">0.9d</td>
+            <td style="text-align:right;font-family:'DM Mono',monospace;font-size:12px;color:var(--success);">93%</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<!-- NOTIFICATIONS -->
+<div id="notifications" class="screen">
+  <div class="page-header">
+    <div>
+      <div class="page-title">Notifications</div>
+      <div class="page-subtitle">Smart alerts, escalations, and status updates</div>
+    </div>
+    <button class="btn btn-ghost">Mark All Read</button>
+  </div>
+
+  <div class="card" style="max-width:720px;">
+    <div class="notif-list">
+      <div class="notif-item unread">
+        <div class="notif-dot"></div>
+        <div class="notif-content">
+          <div class="notif-title">⚠ Escalation — HPLC System (AST-0042)</div>
+          <div class="notif-sub">Vendor Agilent Technologies has not confirmed #WO-2026-089. Target date in 2 days. Manual action required.</div>
+        </div>
+        <div class="notif-time">9:02 AM</div>
+      </div>
+      <div class="notif-item unread">
+        <div class="notif-dot"></div>
+        <div class="notif-content">
+          <div class="notif-title">📋 Service Report Received — PCR System (AST-0055)</div>
+          <div class="notif-sub">Bio-Rad submitted a service report for #WO-2026-081. Ticket moved to Pending Close. Review required.</div>
+        </div>
+        <div class="notif-time">8:31 AM</div>
+      </div>
+      <div class="notif-item unread">
+        <div class="notif-dot"></div>
+        <div class="notif-content">
+          <div class="notif-title">✅ Vendor Confirmed — Flow Cytometer (AST-0008)</div>
+          <div class="notif-sub">BD Biosciences confirmed service for #WO-2026-074 on March 7, 2026. Ticket status updated to Scheduled.</div>
+        </div>
+        <div class="notif-time">Yesterday</div>
+      </div>
+      <div class="divider"></div>
+      <div class="notif-item">
+        <div class="notif-dot read"></div>
+        <div class="notif-content">
+          <div class="notif-title" style="color:var(--muted);">🔧 Work Order Created — Centrifuge (AST-0031)</div>
+          <div class="notif-sub" style="color:var(--subtle);">Auto-scheduled repair ticket #WO-2026-085 created. Vendor Beckman Coulter notified.</div>
+        </div>
+        <div class="notif-time" style="color:var(--subtle);">Feb 22</div>
+      </div>
+      <div class="notif-item">
+        <div class="notif-dot read"></div>
+        <div class="notif-content">
+          <div class="notif-title" style="color:var(--muted);">✅ Ticket Closed — Spectrophotometer (AST-0022)</div>
+          <div class="notif-sub" style="color:var(--subtle);">#WO-2026-060 verified and closed. End user notified instrument is available for use.</div>
+        </div>
+        <div class="notif-time" style="color:var(--subtle);">Feb 14</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+  function showScreen(id) {
+    document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+    document.querySelectorAll('.nav-tab').forEach(t => t.classList.remove('active'));
+    document.getElementById(id).classList.add('active');
+
+    const map = {
+      'dashboard': 0, 'tickets': 1, 'ticket-detail': 2,
+      'vendor': 3, 'reports': 4, 'notifications': 5
+    };
+    const tabs = document.querySelectorAll('.nav-tab');
+    if (map[id] !== undefined) tabs[map[id]].classList.add('active');
+  }
+
+  // Filter chips toggle
+  document.querySelectorAll('.filter-chip').forEach(chip => {
+    chip.addEventListener('click', function() {
+      const siblings = this.closest('.filter-row').querySelectorAll('.filter-chip');
+      siblings.forEach(s => s.classList.remove('active'));
+      this.classList.add('active');
+    });
+  });
+</script>
+</body>
+</html>
